@@ -37,8 +37,8 @@ public class PlayerCtrl : MonoBehaviour {
 		h = Input.GetAxis ("Horizontal");
 		v = Input.GetAxis ("Vertical");
 
-		Debug.Log ("H = " + h.ToString ());
-		Debug.Log ("V = " + v.ToString ());
+		//Debug.Log ("H = " + h.ToString ());
+		//Debug.Log ("V = " + v.ToString ());
 
 		Update_Move ();
 		Update_Rotate ();
