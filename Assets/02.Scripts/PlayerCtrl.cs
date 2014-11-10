@@ -12,6 +12,8 @@ public class PlayerCtrl : MonoBehaviour {
 	public float moveSpeed = 10.0f;
 	public float rotSpeed = 100.0f;
 
+    public int hp = 100;
+
 	[System.Serializable]
 	public class Anim{
 		public AnimationClip idle;
@@ -71,4 +73,30 @@ public class PlayerCtrl : MonoBehaviour {
 			_animation.CrossFade (anim.idle.name, fCrossFadeTime);
 		}
 	}
+
+    private void OnTriggerEnter( Collider coll )
+    {
+        if( coll.gameObject.tag == "PUNCH" )
+        {
+            hp -= 10;
+            Debug.Log("Player HP = " + hp.ToString());
+
+            if( hp <= 0 )
+            {
+                PlayerDie();
+            }
+        }
+    }
+
+    private void PlayerDie()
+    {
+        Debug.Log("Player Die !!");
+
+        GameObject[] monsters = GameObject.FindGameObjectsWithTag( "MONSTER" );
+
+        foreach( GameObject monster in monsters )
+        {
+            monster.SendMessage("OnPlayerDie", SendMessageOptions.DontRequireReceiver);
+        }
+    }
 }

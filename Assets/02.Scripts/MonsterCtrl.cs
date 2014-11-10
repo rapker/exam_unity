@@ -11,6 +11,9 @@ public class MonsterCtrl : MonoBehaviour {
 
 	private bool isDie = false;
 
+    public GameObject bloodEffect;
+    public GameObject bloodDecal;
+
 	private Transform monsterTr;
 	private Transform playerTr;
 	private NavMeshAgent nvAgent;
@@ -34,6 +37,20 @@ public class MonsterCtrl : MonoBehaviour {
 		StartCoroutine (this.CheckMonsterState ());
 		StartCoroutine (this.MonsterAction ());
 	}
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (_animator.GetCurrentAnimatorStateInfo(0).nameHash == hashGotHit)
+        {
+            _animator.SetBool("IsHit", false);
+        }
+
+        if (_animator.GetCurrentAnimatorStateInfo(0).nameHash == Animator.StringToHash("Base Layer.fall"))
+        {
+            _animator.SetBool( "IsPlayerDie", false );
+        }
+    }
 
 	IEnumerator CheckMonsterState()
 	{
@@ -91,16 +108,35 @@ public class MonsterCtrl : MonoBehaviour {
 	{
 		if (coll.gameObject.tag == "BULLET")
 		{
+            StartCoroutine(this.CreateBloodEffect(coll.transform.position));
 			Destroy (coll.gameObject);
 			_animator.SetBool("IsHit", true);
 		}
 	}
-	// Update is called once per frame
-	void Update ()
-	{
-		if( _animator.GetCurrentAnimatorStateInfo (0).nameHash == hashGotHit )
-		{
-			_animator.SetBool ("IsHit", false);
-		}
-	}
+
+    IEnumerator CreateBloodEffect( Vector3 pos )
+    {
+        GameObject _blood1 = (GameObject)Instantiate(bloodEffect, pos, Quaternion.identity );
+        Destroy(_blood1, 2.0f);
+
+        Vector3 decalPos = monsterTr.position + (Vector3.up * 0.01f);
+
+        Quaternion decalRot = Quaternion.Euler(0, Random.Range(0,360), 0);
+
+        GameObject _blood2 = (GameObject)Instantiate(bloodDecal, decalPos, decalRot);
+
+        float _scale = Random.Range(1.5f, 3.5f);
+        _blood2.transform.localScale = new Vector3(_scale, 1, _scale);
+        Destroy(_blood2, 5.0f);
+
+        yield return null;
+    }
+
+    void OnPlayerDie()
+    {
+        StopAllCoroutines();
+
+        nvAgent.Stop();
+        _animator.SetBool("IsPlayerDie", true);
+    }
 }
