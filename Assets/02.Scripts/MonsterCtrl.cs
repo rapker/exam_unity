@@ -21,6 +21,8 @@ public class MonsterCtrl : MonoBehaviour {
 
 	private int hashGotHit = 0;
 
+    private int hp = 100;
+
 	// Use this for initialization
 	void Start ()
 	{
@@ -49,6 +51,11 @@ public class MonsterCtrl : MonoBehaviour {
         if (_animator.GetCurrentAnimatorStateInfo(0).nameHash == Animator.StringToHash("Base Layer.fall"))
         {
             _animator.SetBool( "IsPlayerDie", false );
+        }
+
+        if( _animator.GetCurrentAnimatorStateInfo(0).nameHash == Animator.StringToHash("Base Layer.die"))
+        {
+            _animator.SetBool("IsDie", false);
         }
     }
 
@@ -109,6 +116,12 @@ public class MonsterCtrl : MonoBehaviour {
 		if (coll.gameObject.tag == "BULLET")
 		{
             StartCoroutine(this.CreateBloodEffect(coll.transform.position));
+
+            hp -= coll.gameObject.GetComponent<BulletCtrl>().damage;
+            if( hp <= 0 )
+            {
+                MonsterDie();
+            }
 			Destroy (coll.gameObject);
 			_animator.SetBool("IsHit", true);
 		}
@@ -130,6 +143,34 @@ public class MonsterCtrl : MonoBehaviour {
         Destroy(_blood2, 5.0f);
 
         yield return null;
+    }
+
+    void MonsterDie()
+    {
+        gameObject.tag = "Untagged";
+        StopAllCoroutines();
+
+        isDie = true;
+        monsterState = MonsterState.die;
+        nvAgent.Stop();
+        _animator.SetBool("IsDie", true);
+
+        gameObject.GetComponent<CapsuleCollider>().enabled = false;
+
+        foreach( Collider coll in gameObject.GetComponentsInChildren<SphereCollider>() )
+        {
+            coll.enabled = false;
+        }
+    }
+
+    void OnEnable()
+    {
+        PlayerCtrl.OnPlayerDie += this.OnPlayerDie;
+    }
+
+    void OnDisable()
+    {
+        PlayerCtrl.OnPlayerDie -= this.OnPlayerDie;
     }
 
     void OnPlayerDie()

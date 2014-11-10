@@ -9,9 +9,12 @@ public class FireCtrl : MonoBehaviour {
 	public AudioClip fireSfx;
 	public MeshRenderer _renderer;
 
+    private GameMgr _gameMgr;
+
 	// Use this for initialization
 	void Start () {
 		_renderer.enabled = false;
+        _gameMgr = GameObject.Find("GameManager").GetComponent<GameMgr>();
 	}
 	
 	// Update is called once per frame
@@ -39,7 +42,8 @@ public class FireCtrl : MonoBehaviour {
 	}
 
 	IEnumerator PlaySfx(AudioClip _clip){
-		audio.PlayOneShot(_clip, 0.9f );
+		//audio.PlayOneShot(_clip, 0.9f );
+        _gameMgr.PlaySfx(firePos.position, _clip);
 		yield return null;
 	}
 }

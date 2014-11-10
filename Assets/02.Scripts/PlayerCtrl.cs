@@ -14,6 +14,9 @@ public class PlayerCtrl : MonoBehaviour {
 
     public int hp = 100;
 
+    public delegate void PlayerDieHandler();
+    public static event PlayerDieHandler OnPlayerDie;
+
 	[System.Serializable]
 	public class Anim{
 		public AnimationClip idle;
@@ -27,9 +30,13 @@ public class PlayerCtrl : MonoBehaviour {
 
 	public Animation _animation;
 
+    private GameMgr _gameMgr;
+
 	// Use this for initialization
 	void Start () {
 		tr = GetComponent <Transform>();
+
+        _gameMgr = GameObject.Find("GameManager").GetComponent<GameMgr>();
 
 		Init_Animation ();
 	}
@@ -83,20 +90,24 @@ public class PlayerCtrl : MonoBehaviour {
 
             if( hp <= 0 )
             {
-                PlayerDie();
+                //PlayerDie();
+
+                OnPlayerDie();
+
+                _gameMgr.isGameOver = true;
             }
         }
     }
 
-    private void PlayerDie()
-    {
-        Debug.Log("Player Die !!");
+    //private void PlayerDie()
+    //{
+    //    Debug.Log("Player Die !!");
 
-        GameObject[] monsters = GameObject.FindGameObjectsWithTag( "MONSTER" );
+    //    GameObject[] monsters = GameObject.FindGameObjectsWithTag( "MONSTER" );
 
-        foreach( GameObject monster in monsters )
-        {
-            monster.SendMessage("OnPlayerDie", SendMessageOptions.DontRequireReceiver);
-        }
-    }
+    //    foreach( GameObject monster in monsters )
+    //    {
+    //        monster.SendMessage("OnPlayerDie", SendMessageOptions.DontRequireReceiver);
+    //    }
+    //}
 }
