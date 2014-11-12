@@ -10,7 +10,7 @@ public class PlayerCtrl : MonoBehaviour {
 	private Transform tr;
 
 	public float moveSpeed = 10.0f;
-	public float rotSpeed = 100.0f;
+	public float rotSpeed = 1000000.0f;
 
     public int hp = 100;
 
@@ -64,8 +64,12 @@ public class PlayerCtrl : MonoBehaviour {
 		Vector3 moveDir = ( Vector3.forward* v ) + (Vector3.right * h);
 		tr.Translate( moveDir * Time.deltaTime * moveSpeed, Space.Self );
 	}
-	private void Update_Rotate(){
-		tr.Rotate( Vector3.up * Time.deltaTime * rotSpeed * Input.GetAxis("Mouse X"));
+	private void Update_Rotate()
+    {
+        if (Input.GetMouseButton(1) )
+        {
+            tr.Rotate(Vector3.up * Time.deltaTime * rotSpeed * Input.GetAxis("Mouse X"));
+        }
 	}
 	private void Update_Animation(){
 		if (v >= 0.1f) {

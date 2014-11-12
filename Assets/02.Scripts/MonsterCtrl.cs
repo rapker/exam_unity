@@ -115,17 +115,37 @@ public class MonsterCtrl : MonoBehaviour {
 	{
 		if (coll.gameObject.tag == "BULLET")
 		{
-            StartCoroutine(this.CreateBloodEffect(coll.transform.position));
-
-            hp -= coll.gameObject.GetComponent<BulletCtrl>().damage;
-            if( hp <= 0 )
-            {
-                MonsterDie();
-            }
+            HitDamage(coll.gameObject.GetComponent<BulletCtrl>().damage, coll.transform.position);
+            //StartCoroutine(this.CreateBloodEffect(coll.transform.position));
+            //hp -= coll.gameObject.GetComponent<BulletCtrl>().damage;
+            //if( hp <= 0 )
+            //{
+            //    MonsterDie();
+            //}
 			Destroy (coll.gameObject);
-			_animator.SetBool("IsHit", true);
+            //_animator.SetBool("IsHit", true);
 		}
 	}
+
+    void OnDamage_FromRayCast(object[] _params)
+    {
+        Debug.Log( string.Format("Hit ray {0} : {1}", _params[0], _params[1]) );
+
+        HitDamage( (int)_params[1], (Vector3)_params[0]);
+    }
+
+    private void HitDamage( int _iDamage, Vector3 _hitWorldPos )
+    {
+        StartCoroutine(this.CreateBloodEffect(_hitWorldPos ));
+
+        hp -= _iDamage;
+        if (hp <= 0)
+        {
+            MonsterDie();
+        }
+
+        _animator.SetBool("IsHit", true);
+    }
 
     IEnumerator CreateBloodEffect( Vector3 pos )
     {
