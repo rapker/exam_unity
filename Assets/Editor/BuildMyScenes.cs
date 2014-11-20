@@ -10,7 +10,7 @@ public class BuildMyScenes : MonoBehaviour {
         string[] sceneNames = new string[] { "Assets/01.Scenes/scPlay.unity"
                                         , "Assets/01.Scenes/scLevel01.unity" };
 
-        BuildPipeline.BuildStreamedSceneAssetBundle( sceneNames, "Spaceshooter.unity3d", BuildTarget.StandaloneOSXIntel );
+        BuildPipeline.BuildStreamedSceneAssetBundle(sceneNames, "Spaceshooter2.unity3d", BuildTarget.StandaloneWindows);
     }
 
 	// Use this for initialization
