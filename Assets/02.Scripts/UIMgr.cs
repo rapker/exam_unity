@@ -3,7 +3,7 @@ using System.Collections;
 
 public class UIMgr : MonoBehaviour {
 
-    string url = "file:///D:\\GitHub_Rapker\\exam_unity\\trunk\\Spaceshooter2.unity3d";
+    string url = "file:///D:\\Unity_Projects\\example\\trunk\\Spaceshooter.unity3d";
 
     int version = 1;
 
