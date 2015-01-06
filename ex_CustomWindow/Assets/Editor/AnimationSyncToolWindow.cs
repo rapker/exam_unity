@@ -52,30 +52,30 @@ public class AnimationSyncToolWindow : EditorWindow {
 #endregion Open / Close / Get
 
 #region BaseWindowLayout
-    Rect windowSelectActor;
+    Rect windowActorInfo;
     Rect windowAnimList;
     Rect windowSyncView;
     Rect windowSyncEdit;
     void OnGUI()
     {
         BeginWindows();
-        windowSelectActor = GUILayout.Window(1, windowSelectActor, DoWindow_SelectActor, "1. Select Actor", GUILayout.Width(300), GUILayout.Height(100));
-        
-        windowAnimList = GUILayout.Window(2, windowAnimList, DoWindow_AnimList, "2. AnimList", GUILayout.Width(windowSelectActor.width), GUILayout.Height(500));
-        windowAnimList.y = windowSelectActor.height;
+        windowActorInfo = GUILayout.Window(1, windowActorInfo, DoWindow_ActorInfo, "1. Actor Info", GUILayout.Width(300), GUILayout.Height(100));
+
+        windowAnimList = GUILayout.Window(2, windowAnimList, DoWindow_AnimList, "2. AnimList", GUILayout.Width(windowActorInfo.width), GUILayout.Height(500));
+        windowAnimList.y = windowActorInfo.height;
 
         windowSyncView = GUILayout.Window(3, windowSyncView, DoWindow_SyncView, "3. Sync View", GUILayout.Width(600), GUILayout.Height(500));
-        windowSyncView.x = windowSelectActor.width;
+        windowSyncView.x = windowActorInfo.width;
 
         windowSyncEdit = GUILayout.Window(4, windowSyncEdit, DoWindow_SyncEdit, "4. Sync Edit", GUILayout.Width(600), GUILayout.Height(200));
-        windowSyncEdit.x = windowSelectActor.width;
+        windowSyncEdit.x = windowActorInfo.width;
         windowSyncEdit.y = windowSyncView.height;
         EndWindows();
     }
 #endregion BaseWindowLayout
 
 #region DoWindow_SelectActor
-    void DoWindow_SelectActor(int id)
+    void DoWindow_ActorInfo(int id)
     {
         GUILayout.Label("Select Actor", EditorStyles.boldLabel);
         myString = EditorGUILayout.TextField("Text Field", myString);
