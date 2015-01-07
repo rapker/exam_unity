@@ -2,22 +2,25 @@
 using System.Collections;
 using UnityEditor;
 
+#if UNITY_EDITOR
+using UnityEditorInternal;
+
 public class AnimationSyncToolWindow : EditorWindow {
 
-    string myString = "Hello World";
-    bool groupEnabled;
-    bool myBool = true;
-    float myFloat = 1.23f;
-
-    string searchString = "search";
+    enum EAnimType
+    {
+        EAnimType_None = 0,
+        EAnimType_Animation,
+        EAnimType_Animator
+    }
 
 #region Open / Close / Get
-    static AnimationSyncToolWindow m_instance;
+    static AnimationSyncToolWindow _instance = null;
     static public AnimationSyncToolWindow Get
     {
         get
         {
-            return m_instance;
+            return _instance;
         }
     }
 
@@ -25,16 +28,18 @@ public class AnimationSyncToolWindow : EditorWindow {
     static void OpenAnimationSyncTool()
     {
         AnimationSyncToolWindow tool = EditorWindow.GetWindow(typeof(AnimationSyncToolWindow), false, "AnimationSync") as AnimationSyncToolWindow;
-        tool.minSize = new Vector2(1300, 900);
+        tool.minSize = new Vector2(900, 637);
         Rect pos = tool.position;
         pos.x = 0;
         pos.y = 0;
+        pos.width = 900;
+        pos.height = 637;
         tool.position = pos;
     }
 
     public void OnEnable()
     {
-        m_instance = this;
+        _instance = this;
     }
     public void OnDisable()
     {
@@ -52,66 +57,213 @@ public class AnimationSyncToolWindow : EditorWindow {
 #endregion Open / Close / Get
 
 #region BaseWindowLayout
-    Rect windowActorInfo;
-    Rect windowAnimList;
-    Rect windowSyncView;
-    Rect windowSyncEdit;
+    Rect _windowActorInfo;
+    Rect _windowSyncView;
+    Rect _windowSyncEdit;
     void OnGUI()
     {
         BeginWindows();
-        windowActorInfo = GUILayout.Window(1, windowActorInfo, DoWindow_ActorInfo, "1. Actor Info", GUILayout.Width(300), GUILayout.Height(100));
+        _windowActorInfo = GUILayout.Window(1, _windowActorInfo, DoWindow_ActorInfo, "Actor Info", GUILayout.Width(300), GUILayout.Height(100));
 
-        windowAnimList = GUILayout.Window(2, windowAnimList, DoWindow_AnimList, "2. AnimList", GUILayout.Width(windowActorInfo.width), GUILayout.Height(500));
-        windowAnimList.y = windowActorInfo.height;
+        _windowSyncView = GUILayout.Window(2, _windowSyncView, DoWindow_SyncView, "Sync View", GUILayout.Width(600), GUILayout.Height(430));
+        _windowSyncView.x = _windowActorInfo.width;
 
-        windowSyncView = GUILayout.Window(3, windowSyncView, DoWindow_SyncView, "3. Sync View", GUILayout.Width(600), GUILayout.Height(500));
-        windowSyncView.x = windowActorInfo.width;
-
-        windowSyncEdit = GUILayout.Window(4, windowSyncEdit, DoWindow_SyncEdit, "4. Sync Edit", GUILayout.Width(600), GUILayout.Height(200));
-        windowSyncEdit.x = windowActorInfo.width;
-        windowSyncEdit.y = windowSyncView.height;
+        _windowSyncEdit = GUILayout.Window(3, _windowSyncEdit, DoWindow_SyncEdit, "Sync Edit", GUILayout.Width(600), GUILayout.Height(205));
+        _windowSyncEdit.x = _windowActorInfo.width;
+        _windowSyncEdit.y = _windowSyncView.height;
         EndWindows();
     }
 #endregion BaseWindowLayout
 
 #region DoWindow_SelectActor
+
+    GameObject _CharacterPrefab = null;
+    Animation _Animation = null;
+    Animator _Animator = null;
+
+    EAnimType _eAnimType = EAnimType.EAnimType_None;
+
+    float fMenuHeight = 20.0f;
+    float fLabelWidth = 140.0f;
+    float fValueWidth = 200.0f;
+
     void DoWindow_ActorInfo(int id)
     {
-        GUILayout.Label("Select Actor", EditorStyles.boldLabel);
-        myString = EditorGUILayout.TextField("Text Field", myString);
+        GameObject charPrefab;
 
-        groupEnabled = EditorGUILayout.BeginToggleGroup("Optional Settings", groupEnabled);
+        GUILayout.BeginVertical("Box");
         {
-            myBool = EditorGUILayout.Toggle("Toggle", myBool);
-            myFloat = EditorGUILayout.Slider("Slider", myFloat, 0, 1);
-        }
-        EditorGUILayout.EndToggleGroup();
-
-
-        GUILayout.BeginHorizontal(GUI.skin.FindStyle("Toolbar"));
-        {
-            GUILayout.FlexibleSpace();
-            searchString = GUILayout.TextField(searchString, GUI.skin.FindStyle("ToolbarSeachTextField"));
-            if (GUILayout.Button("", GUI.skin.FindStyle("ToolbarSeachCancelButton")))
+            GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
             {
-                // Remove focus if cleared
-                searchString = "";
-                GUI.FocusControl(null);
+                EditorGUILayout.LabelField("Actor Prefab", GUILayout.Width(fLabelWidth));
+                charPrefab = EditorGUILayout.ObjectField(_CharacterPrefab, typeof(GameObject), false, GUILayout.Width(fValueWidth)) as GameObject;
             }
-            //DrawState();
+            GUILayout.EndHorizontal();
         }
-        GUILayout.EndHorizontal();
+        GUILayout.EndVertical();
+
+        if (_CharacterPrefab != charPrefab)
+            _CharacterPrefab = charPrefab;
+
+        if (null == _CharacterPrefab)
+        {
+            _Animation = null;
+            _Animator = null;
+            _eAnimType = EAnimType.EAnimType_None;
+            EditorGUILayout.LabelField("Please select Actor Prefab");
+            return;
+        }
+
+        _Animation = _CharacterPrefab.GetComponent<Animation>();
+        _Animator = _CharacterPrefab.GetComponent<Animator>();
+
+        if (null == _Animation && null == _Animator)
+        {
+            EditorGUILayout.LabelField("Not Found Anim Component In Actor Prefab");
+            return;
+        }
+
+
+        GUILayout.BeginVertical("Box");
+        {
+            if (_Animation)
+            {
+                _eAnimType = EAnimType.EAnimType_Animation;
+
+                DrawAnimationBaseInfo();
+                DrawAnimationStateList();
+            }
+            else
+            {
+                _eAnimType = EAnimType.EAnimType_Animator;
+
+                DrawAnimatorBaseInfo();
+                DrawAnimatorStateList();
+            }
+        }
+        GUILayout.EndVertical();
+
+
+
+
+        //GUILayout.Label("Select Actor", EditorStyles.boldLabel);
+        //myString = EditorGUILayout.TextField("Select Actor Prefab", myString);
+
+        //groupEnabled = EditorGUILayout.BeginToggleGroup("Optional Settings", groupEnabled);
+        //{
+        //    myBool = EditorGUILayout.Toggle("Toggle", myBool);
+        //    myFloat = EditorGUILayout.Slider("Slider", myFloat, 0, 1);
+        //}
+        //EditorGUILayout.EndToggleGroup();
+
+
+        //GUILayout.BeginHorizontal(GUI.skin.FindStyle("Toolbar"));
+        //{
+        //    GUILayout.FlexibleSpace();
+        //    searchString = GUILayout.TextField(searchString, GUI.skin.FindStyle("ToolbarSeachTextField"));
+        //    if (GUILayout.Button("", GUI.skin.FindStyle("ToolbarSeachCancelButton")))
+        //    {
+        //        // Remove focus if cleared
+        //        searchString = "";
+        //        GUI.FocusControl(null);
+        //    }
+        //    DrawState();
+        //}
+        //GUILayout.EndHorizontal();
     }
 #endregion DoWindow_SelectActor
 
-#region DoWindow_AnimList
-    void DoWindow_AnimList(int id)
-    {
-        GUILayout.Label("Select Animation", EditorStyles.boldLabel);
-    }
-#endregion
 
-    #region DoWindow_SyncView
+#region DrawAnimation
+    void DrawAnimationBaseInfo()
+    {
+        GUILayout.Label("Animation Info");
+    }
+    void DrawAnimationStateList()
+    {
+
+    }
+#endregion DrawAnimation
+
+
+    #region DrawAnimator
+    void DrawAnimatorBaseInfo()
+    {
+        GUILayout.BeginVertical("Box");
+        {
+            GUILayout.Label("Animator Info");
+        }
+        GUILayout.EndVertical();
+
+        GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
+        {
+            EditorGUILayout.LabelField("Controller", GUILayout.Width(fLabelWidth));
+            EditorGUILayout.ObjectField(_Animator.runtimeAnimatorController, typeof(AnimatorController), false, GUILayout.Width(fValueWidth));
+        }
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
+        {
+            EditorGUILayout.LabelField("Avatar", GUILayout.Width(fLabelWidth));
+            EditorGUILayout.ObjectField(_Animator.avatar, typeof(Avatar), false, GUILayout.Width(fValueWidth));
+        }
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
+        {
+            EditorGUILayout.Toggle("Apply Root Motion", _Animator.applyRootMotion, GUILayout.Width(fLabelWidth));
+            GUILayout.Label("", GUILayout.Width(fValueWidth));
+        }
+        GUILayout.EndHorizontal();
+    }
+
+    int curIndexLayer_ForAnimator = 0;
+    int curStateIndex_ForAnimator = 0;
+    string[] dispLayerNames = null;
+
+    float animationDuration = 1;
+
+    Vector2 scrollPos_State;
+
+    State curState;
+
+    void DrawAnimatorStateList()
+    {
+        GUILayout.BeginVertical();
+        {
+            GUILayout.BeginVertical("Box");
+            if( GetDisplayLayerNames() )
+            {
+                GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
+                {
+                    EditorGUILayout.LabelField("Layer", GUILayout.Width(fLabelWidth));
+                    curIndexLayer_ForAnimator = EditorGUILayout.Popup(curIndexLayer_ForAnimator, dispLayerNames, GUILayout.Width(fValueWidth));
+                }
+                GUILayout.EndHorizontal();
+                dispLayerNames = null;
+            }
+            GUILayout.EndVertical();
+        }
+        GUILayout.EndVertical();
+    }
+
+    bool GetDisplayLayerNames()
+    {
+        AnimatorController controller = _Animator.runtimeAnimatorController as AnimatorController;
+        if (controller)
+        {
+            dispLayerNames = new string[controller.layerCount];
+
+            for (int iLayer = 0; iLayer < controller.layerCount; iLayer++)
+            {
+                dispLayerNames[iLayer] = controller.GetLayer(iLayer).name;
+            }
+
+            return true;
+        }
+        return false;
+    }
+#endregion DrawAnimator
+
+#region DoWindow_SyncView
     void DoWindow_SyncView(int id)
     {
         GUILayout.Label("Sync View", EditorStyles.boldLabel);
@@ -121,7 +273,12 @@ public class AnimationSyncToolWindow : EditorWindow {
 #region DoWindow_SyncEdit
     void DoWindow_SyncEdit(int id)
     {
-        GUILayout.Label("Sync Edit", EditorStyles.boldLabel);
+        if (_eAnimType == EAnimType.EAnimType_None)
+        {
+            GUILayout.Label("...", EditorStyles.boldLabel);
+            return;
+        }
+        GUILayout.Label("Edit Sync Data", EditorStyles.boldLabel);
     }
 #endregion
 
@@ -136,3 +293,5 @@ public class AnimationSyncToolWindow : EditorWindow {
         GUILayout.EndVertical();
     }
 }
+
+#endif //UNITY_EDITOR
