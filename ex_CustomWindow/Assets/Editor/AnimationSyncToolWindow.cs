@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEditor;
 
 #if UNITY_EDITOR
@@ -138,7 +139,7 @@ public class AnimationSyncToolWindow : EditorWindow {
                 _eAnimType = EAnimType.EAnimType_Animator;
 
                 DrawAnimatorBaseInfo();
-                DrawAnimatorStateList();
+                DrawAnimatorLayers();
             }
         }
         GUILayout.EndVertical();
@@ -223,15 +224,18 @@ public class AnimationSyncToolWindow : EditorWindow {
 
     Vector2 scrollPos_State;
 
-    State curState;
+    private List<AnimatorControllerLayer> listLayer = new List<AnimatorControllerLayer>();
 
-    void DrawAnimatorStateList()
+    void DrawAnimatorLayers()
     {
         GUILayout.BeginVertical();
         {
             GUILayout.BeginVertical("Box");
-            if( GetDisplayLayerNames() )
+            AnimatorController controller = _Animator.runtimeAnimatorController as AnimatorController;
+            if (controller)
             {
+                listLayer.Clear();
+                GetDisplayLayerNames(controller);
                 GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
                 {
                     EditorGUILayout.LabelField("Layer", GUILayout.Width(fLabelWidth));
@@ -239,28 +243,81 @@ public class AnimationSyncToolWindow : EditorWindow {
                 }
                 GUILayout.EndHorizontal();
                 dispLayerNames = null;
+
+                DrawAnimatorStateList(controller);
             }
             GUILayout.EndVertical();
         }
         GUILayout.EndVertical();
     }
 
-    bool GetDisplayLayerNames()
+    void GetDisplayLayerNames(AnimatorController controller)
     {
-        AnimatorController controller = _Animator.runtimeAnimatorController as AnimatorController;
-        if (controller)
+        dispLayerNames = new string[controller.layerCount];
+
+        for (int iLayer = 0; iLayer < controller.layerCount; iLayer++)
         {
-            dispLayerNames = new string[controller.layerCount];
-
-            for (int iLayer = 0; iLayer < controller.layerCount; iLayer++)
-            {
-                dispLayerNames[iLayer] = controller.GetLayer(iLayer).name;
-            }
-
-            return true;
+            listLayer.Add(controller.GetLayer(iLayer));
+            dispLayerNames[iLayer] = controller.GetLayer(iLayer).name;
         }
-        return false;
     }
+
+    void DrawAnimatorStateList(AnimatorController controller)
+    {
+        if (listLayer.Count <= 0)
+            return;
+
+        for (int i = 0; i < listLayer[curIndexLayer_ForAnimator].stateMachine.stateCount; i++ )
+        {
+            State state = listLayer[curIndexLayer_ForAnimator].stateMachine.GetState(i);
+        }
+            
+
+        //scrollPos_State = GUILayout.BeginScrollView(scrollPos_State);
+
+        //if (arrayGUIState != null)
+        //{
+        //    int selectedStateIndex = GUILayout.SelectionGrid(curStateIndex_ForAnimator, arrayGUIState, 1);
+
+        //    if (selectedStateIndex != curStateIndex)
+        //    {
+        //        curStateIndex = selectedStateIndex;
+
+        //        OnStateChange();
+
+        //    }
+        //}
+        //GUILayout.EndScrollView();
+    }
+
+    //void GetDisplayLayerNames(AnimatorController controller)
+    //{
+        //Motion curMotion = null;
+        //if (curState)
+        //    curMotion = curState.GetMotion();
+
+        //arrayGUIState = new GUIContent[dicStateInfo[curIndexLayer].Count];
+        //for (int i = 0; i < dicStateInfo[curIndexLayer].Count; i++)
+        //{
+        //    State state = dicStateInfo[curIndexLayer][i].state;
+
+        //    arrayGUIState[i] = new GUIContent();
+        //    arrayGUIState[i].text = state.name;
+        //    if (state.GetMotion() != null)
+        //    {
+        //        if (curMotion == state.GetMotion())
+        //            arrayGUIState[i].text = state.name + " [clip: " + state.GetMotion().name + "]";
+
+        //        arrayGUIState[i].tooltip = "Clip : " + state.GetMotion().name;
+        //    }
+        //    else
+        //    {
+        //        if (curState && curState == state)
+        //            arrayGUIState[i].text = state.name + " [no clip]";
+        //    }
+
+        //}
+    //}
 #endregion DrawAnimator
 
 #region DoWindow_SyncView
