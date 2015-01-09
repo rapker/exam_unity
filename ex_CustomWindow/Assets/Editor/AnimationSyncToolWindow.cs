@@ -44,11 +44,11 @@ public class AnimationSyncToolWindow : EditorWindow {
     }
     public void OnDisable()
     {
+        SyncToolPanel_Animation.Release();
+        SyncToolPanel_Animator.Release();
+        SyncToolPanel_Preview.Release();
+
         DestroyAnimationSyncTool();
-    }
-    void Init()
-    {
-        
     }
     void DestroyAnimationSyncTool()
     {
@@ -73,9 +73,171 @@ public class AnimationSyncToolWindow : EditorWindow {
         _windowSyncEdit.x = _windowActorInfo.width;
         _windowSyncEdit.y = _windowSyncView.height;
         EndWindows();
+
+        ProcessInput();
     }
 #endregion BaseWindowLayout
 
+    bool isDraggingOnRender = false;
+    bool isDraggingOnEventTimeline = false;
+    void ProcessInput()
+    {
+        Event evt = Event.current;
+
+        //if (evt.type == EventType.ContextClick)
+        //{
+        //    Vector2 mousePos = evt.mousePosition;
+        //    if (rectEventTimeLine.Contains(mousePos))
+        //    {
+        //        float normalizedPosX = (mousePos.x - (rectEventTimeLine.xMin + 16)) / (float)(rectEventTimeLine.width - 32);
+        //        normalizedPosX = Mathf.Clamp(normalizedPosX, 0, 1);
+        //        ContextParams[(int)ContextType.NEW_EVENT].paramFloat0 = normalizedPosX;
+
+        //        GenericMenu menu = new GenericMenu();
+
+        //        menu.AddItem(new GUIContent("New Animation Event"), false, ContextCallback, ContextType.NEW_EVENT);
+        //        menu.AddItem(new GUIContent("Delete"), false, ContextCallback, ContextType.DELETE_EVENT);
+        //        menu.AddSeparator("");
+        //        menu.AddItem(new GUIContent("Paste Single"), false, ContextCallback, ContextType.PASTE_SINGLE_EVENT);
+        //        menu.AddSeparator("");
+        //        menu.AddItem(new GUIContent("Copy To Clipboard"), false, ContextCallback, ContextType.COPY_TO_CLIPBOARD);
+        //        menu.AddItem(new GUIContent("Paste From Clipboard"), false, ContextCallback, ContextType.PASTE_FROM_CLIPBOARD);
+
+        //        menu.ShowAsContext(); evt.Use();
+        //    }
+        //}
+
+        if (Event.current.type == EventType.scrollWheel)
+        {
+            if (Event.current.delta.y > 0) // up
+            {
+                SyncToolPanel_Preview.Get().MouseWheel(true);
+            }
+            else if (Event.current.delta.y < 0) // down
+            {
+                SyncToolPanel_Preview.Get().MouseWheel(false);
+            }
+
+            //if (cameraFollower != null)
+            //    cameraFollower.SetDistance();
+        }
+
+        SyncToolPanel_Preview.Get().SetMousePosition(Event.current.mousePosition);
+
+        if (Event.current.type == EventType.keyDown && Event.current.keyCode == KeyCode.Delete)
+        {
+            //ContextCallback(ContextType.DELETE_EVENT);
+        }
+
+        if (isDraggingOnRender && Event.current.type == EventType.ignore)
+        {
+            isDraggingOnRender = false;
+            SyncToolPanel_Preview.Get().SetDragging(false);
+
+            //if (isDraggingOnEventTimeline && Event.current.button == 0)
+            //    EndDraggingEventTimeline();
+        }
+
+        if (Event.current.type == EventType.mouseDown)
+        {
+            //Vector2 pos = new Vector2(Event.current.mousePosition.x, Event.current.mousePosition.y);
+            //bool IsAble = SyncToolPanel_Preview.Get().rectPreviewCanvas.Contains(pos);
+            //if (IsAble )
+            {
+                isDraggingOnRender = true;
+                SyncToolPanel_Preview.Get().SetDragging(true);
+            }
+            //else if (rectEventTimeLine_Outline.Contains(Event.current.mousePosition))
+            //{
+            //    if (!isDraggingOnEventTimeline && Event.current.button == 0)
+            //        StartDraggingEventTimeline();
+            //}
+        }
+        else if (Event.current.type == EventType.MouseUp)
+        {
+            isDraggingOnRender = false;
+            isDraggingOnEventTimeline = false;
+            SyncToolPanel_Preview.Get().SetDragging(false);
+
+            //if (isDraggingOnEventTimeline && Event.current.button == 0)
+            //    EndDraggingEventTimeline();
+        }
+
+        //if (isDraggingOnEventTimeline)
+        //{
+        //    rectBoxOnEventTimeline.xMax = Event.current.mousePosition.x;
+        //    rectBoxOnEventTimeline.yMax = Event.current.mousePosition.y;
+        //    GUI.Box(rectBoxOnEventTimeline, "");
+        //}
+    }
+    void ContextCallback(object obj)
+    {
+        //switch ((ContextType)obj)
+        //{
+        //    case ContextType.NEW_EVENT:
+        //        AnimationEvent newAniEvent = new AnimationEvent();
+        //        newAniEvent.time = ContextParams[(int)ContextType.NEW_EVENT].paramFloat0;
+        //        newAniEvent.stringParameter = curStateIdentifier; // In order to tell which state the event is in.
+        //        dicStateInfo[curIndexLayer][curStateIndex].listAniEvent.Add(newAniEvent);
+        //        GenerateEventNameArray();
+        //        break;
+        //    case ContextType.DELETE_EVENT:
+        //        if (selectedAniEvent != null)
+        //            dicStateInfo[curIndexLayer][curStateIndex].listAniEvent.Remove(selectedAniEvent);
+
+        //        foreach (var evt in listAniEventInBox)
+        //        {
+        //            dicStateInfo[curIndexLayer][curStateIndex].listAniEvent.Remove(evt);
+        //        }
+
+        //        GenerateEventNameArray();
+        //        break;
+        //    case ContextType.COPY_SINGLE_EVENT:
+        //        aniEventInfoForSingleCopy = null;
+        //        if (selectedAniEvent != null)
+        //        {
+        //            aniEventInfoForSingleCopy = CreateAniEventInfo(selectedAniEvent);
+        //        }
+        //        else
+        //            Debug.LogError("No selected event");
+        //        break;
+        //    case ContextType.PASTE_SINGLE_EVENT:
+        //        if (aniEventInfoForSingleCopy != null)
+        //        {
+        //            AnimationEvent copiedEvent = AnimatorControllerCopyMachine.CopyEvent(aniEventInfoForSingleCopy.aniEvent);
+        //            copiedEvent.stringParameter = curStateIdentifier; // In order to tell which state the event is in.
+        //            dicStateInfo[curIndexLayer][curStateIndex].listAniEvent.Add(copiedEvent);
+        //            GenerateEventNameArray();
+        //        }
+        //        else
+        //            Debug.LogError("No source event");
+        //        break;
+        //    case ContextType.COPY_TO_CLIPBOARD:
+        //        foreach (var aniEvent in listAniEventInBox)
+        //        {
+        //            if (listClipboard.Find(m => m.aniEvent == aniEvent) == null)
+        //            {
+        //                listClipboard.Add(CreateAniEventInfo(aniEvent));
+        //            }
+        //        }
+
+        //        MecanimEventClipboardWindow.Get().arrayEvent = listClipboard.Select(m =>
+        //            m.indexLayer + ",  " + m.state.name + ",  " + m.aniEvent.functionName + ",  " + m.aniEvent.time).ToArray();
+        //        MecanimEventClipboardWindow.Get().Focus();
+
+        //        break;
+        //    case ContextType.PASTE_FROM_CLIPBOARD:
+        //        foreach (var info in listClipboard)
+        //        {
+        //            AnimationEvent copiedEvent = AnimatorControllerCopyMachine.CopyEvent(info.aniEvent);
+        //            copiedEvent.stringParameter = curStateIdentifier; // In order to tell which state the event is in.
+        //            dicStateInfo[curIndexLayer][curStateIndex].listAniEvent.Add(copiedEvent);
+        //        }
+        //        GenerateEventNameArray();
+        //        MecanimEventClipboardWindow.Get().Focus();
+        //        break;
+        //}
+    }
 #region DoWindow_SelectActor
 
     GameObject _CharacterPrefab = null;
@@ -84,9 +246,9 @@ public class AnimationSyncToolWindow : EditorWindow {
 
     EAnimType _eAnimType = EAnimType.EAnimType_None;
 
-    float fMenuHeight = 20.0f;
-    float fLabelWidth = 140.0f;
-    float fValueWidth = 200.0f;
+    static public float fMenuHeight = 20.0f;
+    static public float fLabelWidth = 140.0f;
+    static public float fValueWidth = 200.0f;
 
     void DoWindow_ActorInfo(int id)
     {
@@ -112,6 +274,7 @@ public class AnimationSyncToolWindow : EditorWindow {
             _Animator = null;
             _eAnimType = EAnimType.EAnimType_None;
             EditorGUILayout.LabelField("Please select Actor Prefab");
+            SyncToolPanel_Preview.Get().ClearActor();
             return;
         }
 
@@ -121,9 +284,9 @@ public class AnimationSyncToolWindow : EditorWindow {
         if (null == _Animation && null == _Animator)
         {
             EditorGUILayout.LabelField("Not Found Anim Component In Actor Prefab");
+            SyncToolPanel_Preview.Get().ClearActor();
             return;
         }
-
 
         GUILayout.BeginVertical("Box");
         {
@@ -131,199 +294,29 @@ public class AnimationSyncToolWindow : EditorWindow {
             {
                 _eAnimType = EAnimType.EAnimType_Animation;
 
-                DrawAnimationBaseInfo();
-                DrawAnimationStateList();
+                SyncToolPanel_Animation.Get().DrawAnimList(_Animation);
             }
             else
             {
                 _eAnimType = EAnimType.EAnimType_Animator;
-
-                DrawAnimatorBaseInfo();
-                DrawAnimatorLayers();
+                SyncToolPanel_Animator.Get().DrawAnimList(_CharacterPrefab, _Animator);
             }
         }
         GUILayout.EndVertical();
-
-
-
-
-        //GUILayout.Label("Select Actor", EditorStyles.boldLabel);
-        //myString = EditorGUILayout.TextField("Select Actor Prefab", myString);
-
-        //groupEnabled = EditorGUILayout.BeginToggleGroup("Optional Settings", groupEnabled);
-        //{
-        //    myBool = EditorGUILayout.Toggle("Toggle", myBool);
-        //    myFloat = EditorGUILayout.Slider("Slider", myFloat, 0, 1);
-        //}
-        //EditorGUILayout.EndToggleGroup();
-
-
-        //GUILayout.BeginHorizontal(GUI.skin.FindStyle("Toolbar"));
-        //{
-        //    GUILayout.FlexibleSpace();
-        //    searchString = GUILayout.TextField(searchString, GUI.skin.FindStyle("ToolbarSeachTextField"));
-        //    if (GUILayout.Button("", GUI.skin.FindStyle("ToolbarSeachCancelButton")))
-        //    {
-        //        // Remove focus if cleared
-        //        searchString = "";
-        //        GUI.FocusControl(null);
-        //    }
-        //    DrawState();
-        //}
-        //GUILayout.EndHorizontal();
     }
 #endregion DoWindow_SelectActor
 
-
-#region DrawAnimation
-    void DrawAnimationBaseInfo()
+    void Update()
     {
-        GUILayout.Label("Animation Info");
+        SyncToolPanel_Preview.Get().Update();
+        Repaint();
     }
-    void DrawAnimationStateList()
-    {
-
-    }
-#endregion DrawAnimation
-
-
-    #region DrawAnimator
-    void DrawAnimatorBaseInfo()
-    {
-        GUILayout.BeginVertical("Box");
-        {
-            GUILayout.Label("Animator Info");
-        }
-        GUILayout.EndVertical();
-
-        GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
-        {
-            EditorGUILayout.LabelField("Controller", GUILayout.Width(fLabelWidth));
-            EditorGUILayout.ObjectField(_Animator.runtimeAnimatorController, typeof(AnimatorController), false, GUILayout.Width(fValueWidth));
-        }
-        GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
-        {
-            EditorGUILayout.LabelField("Avatar", GUILayout.Width(fLabelWidth));
-            EditorGUILayout.ObjectField(_Animator.avatar, typeof(Avatar), false, GUILayout.Width(fValueWidth));
-        }
-        GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
-        {
-            EditorGUILayout.Toggle("Apply Root Motion", _Animator.applyRootMotion, GUILayout.Width(fLabelWidth));
-            GUILayout.Label("", GUILayout.Width(fValueWidth));
-        }
-        GUILayout.EndHorizontal();
-    }
-
-    int curIndexLayer_ForAnimator = 0;
-    int curStateIndex_ForAnimator = 0;
-    string[] dispLayerNames = null;
-
-    float animationDuration = 1;
-
-    Vector2 scrollPos_State;
-
-    private List<AnimatorControllerLayer> listLayer = new List<AnimatorControllerLayer>();
-
-    void DrawAnimatorLayers()
-    {
-        GUILayout.BeginVertical();
-        {
-            GUILayout.BeginVertical("Box");
-            AnimatorController controller = _Animator.runtimeAnimatorController as AnimatorController;
-            if (controller)
-            {
-                listLayer.Clear();
-                GetDisplayLayerNames(controller);
-                GUILayout.BeginHorizontal(GUILayout.Height(fMenuHeight));
-                {
-                    EditorGUILayout.LabelField("Layer", GUILayout.Width(fLabelWidth));
-                    curIndexLayer_ForAnimator = EditorGUILayout.Popup(curIndexLayer_ForAnimator, dispLayerNames, GUILayout.Width(fValueWidth));
-                }
-                GUILayout.EndHorizontal();
-                dispLayerNames = null;
-
-                DrawAnimatorStateList(controller);
-            }
-            GUILayout.EndVertical();
-        }
-        GUILayout.EndVertical();
-    }
-
-    void GetDisplayLayerNames(AnimatorController controller)
-    {
-        dispLayerNames = new string[controller.layerCount];
-
-        for (int iLayer = 0; iLayer < controller.layerCount; iLayer++)
-        {
-            listLayer.Add(controller.GetLayer(iLayer));
-            dispLayerNames[iLayer] = controller.GetLayer(iLayer).name;
-        }
-    }
-
-    void DrawAnimatorStateList(AnimatorController controller)
-    {
-        if (listLayer.Count <= 0)
-            return;
-
-        for (int i = 0; i < listLayer[curIndexLayer_ForAnimator].stateMachine.stateCount; i++ )
-        {
-            State state = listLayer[curIndexLayer_ForAnimator].stateMachine.GetState(i);
-        }
-            
-
-        //scrollPos_State = GUILayout.BeginScrollView(scrollPos_State);
-
-        //if (arrayGUIState != null)
-        //{
-        //    int selectedStateIndex = GUILayout.SelectionGrid(curStateIndex_ForAnimator, arrayGUIState, 1);
-
-        //    if (selectedStateIndex != curStateIndex)
-        //    {
-        //        curStateIndex = selectedStateIndex;
-
-        //        OnStateChange();
-
-        //    }
-        //}
-        //GUILayout.EndScrollView();
-    }
-
-    //void GetDisplayLayerNames(AnimatorController controller)
-    //{
-        //Motion curMotion = null;
-        //if (curState)
-        //    curMotion = curState.GetMotion();
-
-        //arrayGUIState = new GUIContent[dicStateInfo[curIndexLayer].Count];
-        //for (int i = 0; i < dicStateInfo[curIndexLayer].Count; i++)
-        //{
-        //    State state = dicStateInfo[curIndexLayer][i].state;
-
-        //    arrayGUIState[i] = new GUIContent();
-        //    arrayGUIState[i].text = state.name;
-        //    if (state.GetMotion() != null)
-        //    {
-        //        if (curMotion == state.GetMotion())
-        //            arrayGUIState[i].text = state.name + " [clip: " + state.GetMotion().name + "]";
-
-        //        arrayGUIState[i].tooltip = "Clip : " + state.GetMotion().name;
-        //    }
-        //    else
-        //    {
-        //        if (curState && curState == state)
-        //            arrayGUIState[i].text = state.name + " [no clip]";
-        //    }
-
-        //}
-    //}
-#endregion DrawAnimator
 
 #region DoWindow_SyncView
     void DoWindow_SyncView(int id)
     {
         GUILayout.Label("Sync View", EditorStyles.boldLabel);
+        SyncToolPanel_Preview.Get().DrawPreview();
     }
 #endregion DoWindow_SyncView
 
@@ -338,17 +331,6 @@ public class AnimationSyncToolWindow : EditorWindow {
         GUILayout.Label("Edit Sync Data", EditorStyles.boldLabel);
     }
 #endregion
-
-    void DrawState()
-    {
-        GUILayout.BeginVertical(GUILayout.Width(200));
-        {
-            GUILayout.BeginVertical("Box");
-            GUILayout.Label(" States ");
-            GUILayout.EndVertical();
-        }
-        GUILayout.EndVertical();
-    }
 }
 
 #endif //UNITY_EDITOR
