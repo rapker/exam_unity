@@ -27,7 +27,7 @@ public class SyncToolPanel_Animation
             m_instance = null;
     }
 
-    public void DrawAnimList(Animation _Animation)
+    public void DrawAnimList()
     {
         GUILayout.Label("test label");
     }

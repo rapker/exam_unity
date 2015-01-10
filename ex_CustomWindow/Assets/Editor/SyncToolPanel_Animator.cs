@@ -24,7 +24,8 @@ public struct AnimatorInfo
 public class SyncToolPanel_Animator
 {
     static SyncToolPanel_Animator m_instance = null;
-    AnimatorInfo m_Info;
+    public AnimatorInfo m_Info;
+    public Animator _Animator = null;
 
     static public SyncToolPanel_Animator Get()
     {
@@ -48,12 +49,13 @@ public class SyncToolPanel_Animator
         }
     }
 
-    public void DrawAnimList(GameObject actorPrefab, Animator _Animator)
+    public void DrawAnimList(GameObject actorPrefab)
     {
-        if (null == actorPrefab || null == _Animator)
+        if (null == actorPrefab)
             return;
 
-        m_Info.actorPrefab = actorPrefab;
+        if (null == _Animator)
+            return;
 
         GUILayout.BeginVertical("Box");
         {
@@ -80,28 +82,33 @@ public class SyncToolPanel_Animator
         }
         GUILayout.EndHorizontal();
 
-        DrawAnimatorLayers( _Animator );
+        DrawLayers();
     }
 
     Vector2 scrollPos_State;
 
-    void DrawAnimatorLayers(Animator _Animator)
+    void DrawLayers()
     {
         GUILayout.BeginVertical();
         {
             GUILayout.BeginVertical("Box");
             AnimatorController controller = _Animator.runtimeAnimatorController as AnimatorController;
-            if (controller)
+            if (controller && null != m_Info.dispLayerNames)
             {
-                m_Info.listLayer.Clear();
-                GetDisplayLayerNames(controller);
+                //GetDisplayLayerNames(controller);
                 GUILayout.BeginHorizontal(GUILayout.Height(AnimationSyncToolWindow.fMenuHeight));
                 {
                     EditorGUILayout.LabelField("Layer", GUILayout.Width(AnimationSyncToolWindow.fLabelWidth));
-                    m_Info.curLayerIndex = EditorGUILayout.Popup(m_Info.curLayerIndex, m_Info.dispLayerNames, GUILayout.Width(AnimationSyncToolWindow.fValueWidth));
+                    //m_Info.curLayerIndex = EditorGUILayout.Popup(m_Info.curLayerIndex, m_Info.dispLayerNames, GUILayout.Width(AnimationSyncToolWindow.fValueWidth));
+                    int newSelectedLayer = EditorGUILayout.Popup(m_Info.curLayerIndex, m_Info.dispLayerNames, GUILayout.Width(AnimationSyncToolWindow.fValueWidth));
+                    if( m_Info.curLayerIndex != newSelectedLayer )
+                    {
+                        m_Info.curLayerIndex = newSelectedLayer;
+                        ChangeLayer();
+                    }
                 }
                 GUILayout.EndHorizontal();
-                DrawAnimatorStateList(controller);
+                DrawState();
             }
             else
             {
@@ -113,11 +120,15 @@ public class SyncToolPanel_Animator
         GUILayout.EndVertical();
     }
 
-    void GetDisplayLayerNames(AnimatorController controller)
+    public void GetDisplayLayerNames(AnimatorController controller)
     {
+        if (null == controller)
+            return;
+
         if (null != m_Info.dispLayerNames)
             m_Info.dispLayerNames = null;
 
+        m_Info.listLayer.Clear();
         m_Info.dispLayerNames = new string[controller.layerCount];
 
         for (int iLayer = 0; iLayer < controller.layerCount; iLayer++)
@@ -127,7 +138,7 @@ public class SyncToolPanel_Animator
         }
     }
 
-    void DrawAnimatorStateList(AnimatorController controller)
+    void DrawState()
     {
         if (m_Info.listLayer.Count <= 0)
         {
@@ -159,9 +170,46 @@ public class SyncToolPanel_Animator
         if (selectedStateIndex != m_Info.curStateIndex)
         {
             m_Info.curStateIndex = selectedStateIndex;
+            ChangeState();
         }
-
-        SyncToolPanel_Preview.Get().ChangeActorForAnimator(m_Info);
     }
+
+    public void ChangeLayer()
+    {
+        if (m_Info.curLayerIndex < 0)
+            return;
+
+        m_Info.curStateIndex = 0;
+
+        //GenerateStateGUIContentArray();
+
+        if (m_Info.listLayer.Count > m_Info.curLayerIndex && m_Info.listLayer[m_Info.curLayerIndex].stateMachine.stateCount > 0)
+        {
+            State curState = m_Info.listLayer[m_Info.curLayerIndex].stateMachine.GetState(0);
+
+            AnimatorController controller = _Animator.runtimeAnimatorController as AnimatorController;
+            //controller.GetLayer(0).stateMachine.GetState(0).SetAnimationClip(curState.GetMotion() as AnimationClip);
+        }
+    }
+
+    void ChangeState()
+    {
+        PlayReady_FromPreview();
+        SyncToolPanel_Preview.Get().Stop();
+    }
+
+    public void PlayReady_FromPreview()
+    {
+        StateMachine machine = m_Info.listLayer[m_Info.curLayerIndex].stateMachine;
+        State curState = machine.GetState(m_Info.curStateIndex);
+        if (curState && curState.GetMotion())
+        {
+            SyncToolPanel_Preview.Get().animationDuration = curState.GetMotion().averageDuration;
+            AnimatorController controller = _Animator.runtimeAnimatorController as AnimatorController;
+            //controller.GetLayer(0).stateMachine.GetState(0).SetAnimationClip(curState.GetMotion() as AnimationClip);
+            _Animator.CrossFade(curState.name, 0f, 0, 0f);
+        }
+    }
+
 }
 #endif  //UNITY_EDITOR

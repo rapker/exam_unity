@@ -29,12 +29,12 @@ public class AnimationSyncToolWindow : EditorWindow {
     static void OpenAnimationSyncTool()
     {
         AnimationSyncToolWindow tool = EditorWindow.GetWindow(typeof(AnimationSyncToolWindow), false, "AnimationSync") as AnimationSyncToolWindow;
-        tool.minSize = new Vector2(900, 637);
+        tool.minSize = new Vector2(1100, 700);
         Rect pos = tool.position;
         pos.x = 0;
         pos.y = 0;
-        pos.width = 900;
-        pos.height = 637;
+        pos.width = 1100;
+        pos.height = 700;
         tool.position = pos;
     }
 
@@ -60,7 +60,6 @@ public class AnimationSyncToolWindow : EditorWindow {
 #region BaseWindowLayout
     Rect _windowActorInfo;
     Rect _windowSyncView;
-    Rect _windowSyncEdit;
     void OnGUI()
     {
         BeginWindows();
@@ -69,9 +68,6 @@ public class AnimationSyncToolWindow : EditorWindow {
         _windowSyncView = GUILayout.Window(2, _windowSyncView, DoWindow_SyncView, "Sync View", GUILayout.Width(600), GUILayout.Height(430));
         _windowSyncView.x = _windowActorInfo.width;
 
-        _windowSyncEdit = GUILayout.Window(3, _windowSyncEdit, DoWindow_SyncEdit, "Sync Edit", GUILayout.Width(600), GUILayout.Height(205));
-        _windowSyncEdit.x = _windowActorInfo.width;
-        _windowSyncEdit.y = _windowSyncView.height;
         EndWindows();
 
         ProcessInput();
@@ -82,7 +78,7 @@ public class AnimationSyncToolWindow : EditorWindow {
     bool isDraggingOnEventTimeline = false;
     void ProcessInput()
     {
-        Event evt = Event.current;
+        //Event evt = Event.current;
 
         //if (evt.type == EventType.ContextClick)
         //{
@@ -140,9 +136,7 @@ public class AnimationSyncToolWindow : EditorWindow {
 
         if (Event.current.type == EventType.mouseDown)
         {
-            //Vector2 pos = new Vector2(Event.current.mousePosition.x, Event.current.mousePosition.y);
-            //bool IsAble = SyncToolPanel_Preview.Get().rectPreviewCanvas.Contains(pos);
-            //if (IsAble )
+            if (_windowSyncView.Contains(Event.current.mousePosition))
             {
                 isDraggingOnRender = true;
                 SyncToolPanel_Preview.Get().SetDragging(true);
@@ -241,14 +235,47 @@ public class AnimationSyncToolWindow : EditorWindow {
 #region DoWindow_SelectActor
 
     GameObject _CharacterPrefab = null;
-    Animation _Animation = null;
-    Animator _Animator = null;
+    //Animation _Animation = null;
 
     EAnimType _eAnimType = EAnimType.EAnimType_None;
 
     static public float fMenuHeight = 20.0f;
     static public float fLabelWidth = 140.0f;
     static public float fValueWidth = 200.0f;
+
+    bool IsValidActor(GameObject charPrefab, ref string rErrMsg)
+    {
+        if (_CharacterPrefab != charPrefab)
+            _CharacterPrefab = charPrefab;
+
+        if (null == _CharacterPrefab)
+        {
+            SyncToolPanel_Animator.Get()._Animator = null;
+            SyncToolPanel_Animator.Get().m_Info.actorPrefab = null;
+            _eAnimType = EAnimType.EAnimType_None;
+            //EditorGUILayout.LabelField("Please select Actor Prefab");
+            rErrMsg = "Please select Actor Prefab";
+            return false;
+        }
+
+        if (null != _CharacterPrefab.GetComponent<Animation>() )
+        {
+            _eAnimType = EAnimType.EAnimType_Animation;
+        }
+        else if (null != _CharacterPrefab.GetComponent<Animator>() )
+        {
+            _eAnimType = EAnimType.EAnimType_Animator;
+        }
+        else
+        {
+            //EditorGUILayout.LabelField("Not Found Anim Component In Actor Prefab");
+            rErrMsg = "Not Found Anim Component In Actor Prefab";
+            return false;
+        }
+
+        return true;
+    }
+
 
     void DoWindow_ActorInfo(int id)
     {
@@ -265,47 +292,37 @@ public class AnimationSyncToolWindow : EditorWindow {
         }
         GUILayout.EndVertical();
 
-        if (_CharacterPrefab != charPrefab)
-            _CharacterPrefab = charPrefab;
+        //if (_CharacterPrefab == charPrefab)
+        //    return;
 
-        if (null == _CharacterPrefab)
+        string rErrMsg = "";
+        if ( false == IsValidActor(charPrefab, ref rErrMsg) )
         {
-            _Animation = null;
-            _Animator = null;
-            _eAnimType = EAnimType.EAnimType_None;
-            EditorGUILayout.LabelField("Please select Actor Prefab");
-            SyncToolPanel_Preview.Get().ClearActor();
-            return;
-        }
-
-        _Animation = _CharacterPrefab.GetComponent<Animation>();
-        _Animator = _CharacterPrefab.GetComponent<Animator>();
-
-        if (null == _Animation && null == _Animator)
-        {
-            EditorGUILayout.LabelField("Not Found Anim Component In Actor Prefab");
+            EditorGUILayout.LabelField(rErrMsg);
             SyncToolPanel_Preview.Get().ClearActor();
             return;
         }
 
         GUILayout.BeginVertical("Box");
         {
-            if (_Animation)
+            if (_eAnimType == EAnimType.EAnimType_Animation)
             {
-                _eAnimType = EAnimType.EAnimType_Animation;
-
-                SyncToolPanel_Animation.Get().DrawAnimList(_Animation);
+                SyncToolPanel_Animation.Get().DrawAnimList();
             }
-            else
+            else if (_eAnimType == EAnimType.EAnimType_Animator)
             {
-                _eAnimType = EAnimType.EAnimType_Animator;
-                SyncToolPanel_Animator.Get().DrawAnimList(_CharacterPrefab, _Animator);
+                if (SyncToolPanel_Animator.Get().m_Info.actorPrefab != charPrefab)
+                {
+                    SyncToolPanel_Animator.Get().m_Info.actorPrefab = _CharacterPrefab;
+                    SyncToolPanel_Preview.Get().ChangeActorForAnimator(SyncToolPanel_Animator.Get().m_Info);
+                }
+                
+                SyncToolPanel_Animator.Get().DrawAnimList(_CharacterPrefab);
             }
         }
         GUILayout.EndVertical();
     }
 #endregion DoWindow_SelectActor
-
     void Update()
     {
         SyncToolPanel_Preview.Get().Update();
