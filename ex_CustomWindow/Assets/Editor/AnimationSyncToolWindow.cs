@@ -59,7 +59,8 @@ public class AnimationSyncToolWindow : EditorWindow {
 
 #region BaseWindowLayout
     Rect _windowActorInfo;
-    Rect _windowSyncView;
+    public Rect _windowSyncView;
+
     void OnGUI()
     {
         BeginWindows();
@@ -67,6 +68,9 @@ public class AnimationSyncToolWindow : EditorWindow {
 
         _windowSyncView = GUILayout.Window(2, _windowSyncView, DoWindow_SyncView, "Sync View", GUILayout.Width(600), GUILayout.Height(430));
         _windowSyncView.x = _windowActorInfo.width;
+
+        SyncToolPanel_Preview.Get()._rectPreviewForEvent.x = _windowSyncView.x;
+        SyncToolPanel_Preview.Get()._rectPreviewForEvent.y = _windowSyncView.y;
 
         EndWindows();
 
@@ -136,7 +140,8 @@ public class AnimationSyncToolWindow : EditorWindow {
 
         if (Event.current.type == EventType.mouseDown)
         {
-            if (_windowSyncView.Contains(Event.current.mousePosition))
+            //if (_windowSyncView.Contains(Event.current.mousePosition))
+            if (SyncToolPanel_Preview.Get()._rectPreviewForEvent.Contains(Event.current.mousePosition))
             {
                 isDraggingOnRender = true;
                 SyncToolPanel_Preview.Get().SetDragging(true);

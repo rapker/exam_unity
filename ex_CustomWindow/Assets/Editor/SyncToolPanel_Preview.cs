@@ -161,10 +161,11 @@ public class SyncToolPanel_Preview
 
     int EditPanelTop = 520;
 
-    
+
     RenderTexture m_renderTexture = new RenderTexture(RenderWidth, RenderWidth, 1);
 
-    Rect rectPreviewCanvas = new Rect(RenderLeft, RenderTop, RenderWidth - 50, RenderHeight);
+    public Rect rectPreviewCanvas = new Rect(RenderLeft, RenderTop, RenderWidth, RenderHeight);
+    public Rect _rectPreviewForEvent = new Rect(0, 0, RenderWidth, RenderHeight + 50);
 
     float deltaTime = 0;
     float lastRealTime = 0;
