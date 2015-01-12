@@ -11,8 +11,7 @@ using UnityEditorInternal;
 [System.Serializable]
 public class SyncToolPanel_Preview
 {
-    const string pathPreviewToolSet = "Assets/Editor/SyncTool/PreviewToolSet.prefab";
-    //const string pathPreviewToolSet = "Assets/Plugin/MecanimEventEditor/MecanimPreviewToolSet.prefab";
+    string pathPreviewToolset = "Assets/Plugin/MecanimEventEditor/" + MecanimPreviewToolSet.strPreviewToolset + ".prefab";
 
     static SyncToolPanel_Preview m_instance = null;
     Camera m_preCamera;
@@ -45,7 +44,7 @@ public class SyncToolPanel_Preview
 
         DestoryPreviewTools();
 
-        GameObject goPreview = AssetDatabase.LoadAssetAtPath(pathPreviewToolSet, typeof(GameObject)) as GameObject;
+        GameObject goPreview = AssetDatabase.LoadAssetAtPath(pathPreviewToolset, typeof(GameObject)) as GameObject;
         m_PreviewToolSet = GameObject.Instantiate(goPreview) as GameObject;
 
         MecanimPreviewToolSet previewToolSet = m_PreviewToolSet.GetComponent<MecanimPreviewToolSet>();
