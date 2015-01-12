@@ -11,7 +11,7 @@ using UnityEditorInternal;
 [System.Serializable]
 public class SyncToolPanel_Preview
 {
-    const string pathPreviewToolSet = "Assets/Editor/MecanimPreviewToolSet.prefab";
+    const string pathPreviewToolSet = "Assets/Editor/SyncTool/PreviewToolSet.prefab";
     //const string pathPreviewToolSet = "Assets/Plugin/MecanimEventEditor/MecanimPreviewToolSet.prefab";
 
     static SyncToolPanel_Preview m_instance = null;
