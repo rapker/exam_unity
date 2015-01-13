@@ -255,8 +255,12 @@ public class AnimationSyncToolWindow : EditorWindow {
 
         if (null == _CharacterPrefab)
         {
+            SyncToolPanel_Animation.Get()._Animation = null;
+            SyncToolPanel_Animation.Get().m_Info.actorPrefab = null;
+
             SyncToolPanel_Animator.Get()._Animator = null;
             SyncToolPanel_Animator.Get().m_Info.actorPrefab = null;
+
             _eAnimType = EAnimType.EAnimType_None;
             //EditorGUILayout.LabelField("Please select Actor Prefab");
             rErrMsg = "Please select Actor Prefab";
@@ -312,7 +316,12 @@ public class AnimationSyncToolWindow : EditorWindow {
         {
             if (_eAnimType == EAnimType.EAnimType_Animation)
             {
-                SyncToolPanel_Animation.Get().DrawAnimList();
+                if (SyncToolPanel_Animation.Get().m_Info.actorPrefab != charPrefab)
+                {
+                    SyncToolPanel_Animation.Get().m_Info.actorPrefab = _CharacterPrefab;
+                    SyncToolPanel_Preview.Get().ChangeActorForAnimation(SyncToolPanel_Animation.Get().m_Info);
+                }
+                SyncToolPanel_Animation.Get().DrawAnimList(_CharacterPrefab);
             }
             else if (_eAnimType == EAnimType.EAnimType_Animator)
             {
@@ -327,6 +336,9 @@ public class AnimationSyncToolWindow : EditorWindow {
         }
         GUILayout.EndVertical();
     }
+
+    public bool IsLegacyType() { return (_eAnimType == EAnimType.EAnimType_Animation); }
+    public bool IsMecanimType() { return (_eAnimType == EAnimType.EAnimType_Animator);  }
 #endregion DoWindow_SelectActor
     void Update()
     {

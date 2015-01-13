@@ -49,6 +49,14 @@ public class SyncToolPanel_Animator
         }
     }
 
+    public void _Update(float deltaTime)
+    {
+        if (null == _Animator)
+            return;
+
+        _Animator.Update(deltaTime);
+    }
+
     public void DrawAnimList(GameObject actorPrefab)
     {
         if (null == actorPrefab)

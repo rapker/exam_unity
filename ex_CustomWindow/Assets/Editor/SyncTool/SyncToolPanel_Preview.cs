@@ -86,7 +86,31 @@ public class SyncToolPanel_Preview
         }
     }
 
-    public void ChangeActorForAnimator( AnimatorInfo _Info)
+    public void ChangeActorForAnimation(AnimationInfo _Info)
+    {
+        if (null == _Info.actorPrefab)
+        {
+            ClearActor();
+            return;
+        }
+
+        GameObject newActorGO = GameObject.Find(_Info.actorPrefab.name + "(Clone)");
+        if (null == m_curActorGO && null == newActorGO)
+        {
+            m_curActorGO = GameObject.Instantiate(_Info.actorPrefab) as GameObject;
+            BuildActor_ForAnimation();
+        }
+        else if (m_curActorGO != newActorGO)
+        {
+            ClearActor();
+            m_curActorGO = GameObject.Instantiate(_Info.actorPrefab) as GameObject;
+            BuildActor_ForAnimation();
+        }
+
+        //isGridShow = GUILayout.Toggle(isGridShow, "Show Grid", EditorStyles.radioButton, GUILayout.Width(100));
+        ShowGrid(isGridShow);
+    }
+    public void ChangeActorForAnimator(AnimatorInfo _Info)
     {
         if( null == _Info.actorPrefab )
         {
@@ -111,6 +135,31 @@ public class SyncToolPanel_Preview
         ShowGrid(isGridShow);
     }
 
+    void BuildActor_ForAnimation()
+    {
+        if (null == m_curActorGO)
+            return;
+
+        Animation animation = m_curActorGO.GetComponentInChildren<Animation>();
+        int iClipCount = animation.GetClipCount();
+        if (iClipCount > 0)
+        {
+            SyncToolPanel_Animation.Get()._Animation = animation;
+            SyncToolPanel_Animation.Get().GetDisplayAnimationClipName();
+        }
+
+        foreach (Transform child in GetPreviewToolSet().slotForActor.transform)
+        {
+            GameObject.DestroyImmediate(child.gameObject);
+        }
+
+        // Add the new built actor to the slot for actor
+        m_curActorGO.transform.parent = GetPreviewToolSet().slotForActor.transform;
+        m_curActorGO.transform.localPosition = Vector3.zero;
+
+        GetPreviewToolSet().trackball.Init(m_curActorGO);
+        SyncToolPanel_Animation.Get().ChangeState();
+    }
     void BuildActor_ForAnimator()
     {
         if (null == m_curActorGO)
@@ -230,12 +279,20 @@ public class SyncToolPanel_Preview
     }
     void _Update(float deltaTime)
     {
-        if (null == SyncToolPanel_Animator.Get()._Animator)
+        if( AnimationSyncToolWindow.Get.IsLegacyType() )
+        {
+            SyncToolPanel_Animation.Get()._Update(deltaTime, normalizedTime);
+        }
+        else if (AnimationSyncToolWindow.Get.IsLegacyType() )
+        {
+            SyncToolPanel_Animator.Get()._Update(deltaTime);
+        }
+        else
+        {
             return;
+        }
 
         GetPreviewToolSet().SimulateParticles(elapsedTime);
-
-        SyncToolPanel_Animator.Get()._Animator.Update(deltaTime);
 
         Selection.activeGameObject = GetPreviewToolSet().rootParticle;
         normalizedTime = elapsedTime / animationDuration;
@@ -597,20 +654,36 @@ public class SyncToolPanel_Preview
 
     void Play()
     {
-        if (SyncToolPanel_Animator.Get()._Animator == null)
-            return;
+        if (AnimationSyncToolWindow.Get.IsLegacyType())
+        {
+            if (SyncToolPanel_Animation.Get()._Animation == null)
+                return;
 
-        SyncToolPanel_Animator.Get()._Animator.transform.localPosition = Vector3.zero;
-        //ResetParticles();
-        isPlaying = true;
-        elapsedTime = 0;
-        //SyncToolPanel_Animator.Get()._Animator.CrossFade("New State", 0f, 0, 0f);
-        SyncToolPanel_Animator.Get().PlayReady_FromPreview();
-        //SyncToolPanel_Animator.Get()._Animator.ForceStateNormalizedTime(0);
+            //SyncToolPanel_Animation.Get()._Animation.transform.localPosition = Vector3.zero;
 
-        Selection.activeGameObject = GetPreviewToolSet().rootParticle;
+            isPlaying = true;
+            elapsedTime = 0;
+            //SyncToolPanel_Animator.Get()._Animator.CrossFade("New State", 0f, 0, 0f);
+            SyncToolPanel_Animation.Get().PlayReady_FromPreview();
+            //SyncToolPanel_Animator.Get()._Animator.ForceStateNormalizedTime(0);
 
+            Selection.activeGameObject = GetPreviewToolSet().rootParticle;
+        }
+        else if (AnimationSyncToolWindow.Get.IsMecanimType())
+        {
+            if (SyncToolPanel_Animator.Get()._Animator == null)
+                return;
 
+            //SyncToolPanel_Animator.Get()._Animator.transform.localPosition = Vector3.zero;
+            //ResetParticles();
+            isPlaying = true;
+            elapsedTime = 0;
+            //SyncToolPanel_Animator.Get()._Animator.CrossFade("New State", 0f, 0, 0f);
+            SyncToolPanel_Animator.Get().PlayReady_FromPreview();
+            //SyncToolPanel_Animator.Get()._Animator.ForceStateNormalizedTime(0);
+
+            Selection.activeGameObject = GetPreviewToolSet().rootParticle;
+        }
     }
 
     public void Stop()
@@ -620,18 +693,35 @@ public class SyncToolPanel_Preview
         isPlaying = false;
         isPause = false;
 
-        if (SyncToolPanel_Animator.Get()._Animator == null)
-            return;
-        
-        //SyncToolPanel_Animator.Get()._Animator.CrossFade("New State", 0f, 0, 0f);
-        //SyncToolPanel_Animator.Get()._Animator.ForceStateNormalizedTime(0);
-        SyncToolPanel_Animator.Get()._Animator.transform.localPosition = Vector3.zero;
-        SyncToolPanel_Animator.Get()._Animator.transform.localRotation = Quaternion.identity;
-        
-        SyncToolPanel_Animator.Get()._Animator.Update(0);
-        //SyncToolPanel_Animator.Get()._Animator.Update(0);
+        if (AnimationSyncToolWindow.Get.IsLegacyType() )
+        {
+            if (SyncToolPanel_Animation.Get()._Animation == null)
+                return;
 
-        //ResetParticles();
+            //SyncToolPanel_Animator.Get()._Animator.CrossFade("New State", 0f, 0, 0f);
+            //SyncToolPanel_Animator.Get()._Animator.ForceStateNormalizedTime(0);
+            SyncToolPanel_Animation.Get()._Animation.transform.localPosition = Vector3.zero;
+            SyncToolPanel_Animation.Get()._Animation.transform.localRotation = Quaternion.identity;
+
+            SyncToolPanel_Animation.Get().Stop_FromPreview();
+            //SyncToolPanel_Animation.Get()._Animation.Update(0);
+
+            //ResetParticles();
+        }
+        else if (AnimationSyncToolWindow.Get.IsMecanimType())
+        {
+            if (SyncToolPanel_Animator.Get()._Animator == null)
+                return;
+
+            //SyncToolPanel_Animator.Get()._Animator.CrossFade("New State", 0f, 0, 0f);
+            //SyncToolPanel_Animator.Get()._Animator.ForceStateNormalizedTime(0);
+            SyncToolPanel_Animator.Get()._Animator.transform.localPosition = Vector3.zero;
+            SyncToolPanel_Animator.Get()._Animator.transform.localRotation = Quaternion.identity;
+
+            SyncToolPanel_Animator.Get()._Animator.Update(0);
+
+            //ResetParticles();
+        }
     }
 
     void Pause(bool bPause)
