@@ -165,10 +165,10 @@ public class SyncToolPanel_Preview
         if (null == m_curActorGO)
             return;
 
-        Animator[] animators = m_curActorGO.GetComponentsInChildren<Animator>(true);
-        if (animators.Length > 0)
+        Animator animator = m_curActorGO.GetComponentInChildren<Animator>();
+        if (animator)
         {
-            SyncToolPanel_Animator.Get()._Animator = animators[0];
+            SyncToolPanel_Animator.Get()._Animator = animator;
             SyncToolPanel_Animator.Get()._Animator.fireEvents = false; // We don't need to fire events since we take care of them in Update().
             //curActorGO.AddComponent<AnimationEventReceiver>();
 
@@ -283,7 +283,7 @@ public class SyncToolPanel_Preview
         {
             SyncToolPanel_Animation.Get()._Update(deltaTime, normalizedTime);
         }
-        else if (AnimationSyncToolWindow.Get.IsLegacyType() )
+        else if (AnimationSyncToolWindow.Get.IsMecanimType() )
         {
             SyncToolPanel_Animator.Get()._Update(deltaTime);
         }

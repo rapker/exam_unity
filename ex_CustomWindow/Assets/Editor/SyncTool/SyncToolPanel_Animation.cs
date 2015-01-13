@@ -110,12 +110,12 @@ public class SyncToolPanel_Animation
             return;
 
         PlayReady_FromPreview();
-        SyncToolPanel_Preview.Get().Stop();
+        //SyncToolPanel_Preview.Get().Stop();
     }
 
     public void PlayReady_FromPreview()
     {
-        AnimationMode.StartAnimationMode();
+        //AnimationMode.StartAnimationMode();
 
         AnimationClip clip = _Animation.GetClip(m_Info.clipNames[m_Info.curStateIndex]);
         _Animation.clip = clip;
